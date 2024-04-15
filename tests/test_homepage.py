@@ -8,8 +8,8 @@ def test_homepage():
 
     try:
         # Open the homepage of your Django application
-        driver.get("http://ecommerce-django-react.herokuapp.com)  
-                   
+        driver.get("http://ecommerce-django-react.herokuapp.com")  # Fixed the URL
+
         # Find elements on the homepage and interact with them
         # Example: Click on a link
         driver.find_element_by_link_text("About").click()
