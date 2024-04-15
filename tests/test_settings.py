@@ -3,6 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
 
+# create client fixture
+@pytest.fixture
+def client():
+    client = requests.Session()
+    return client
+    
 def test_debug_mode():
     """
     Test if DEBUG mode is set to False in production.
