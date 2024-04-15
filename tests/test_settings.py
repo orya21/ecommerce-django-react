@@ -1,6 +1,5 @@
 import pytest
 import requests
-from bs4 import BeautifulSoup
 from django.conf import settings
 
 # create client fixture
