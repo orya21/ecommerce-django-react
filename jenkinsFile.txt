@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/orya21/ecommerce-django-react.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh """
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt 
+                python manage.py runserver 0.0.0.0:5000 &
+                sleep 10  # Wait for the server to start
+                """
+            }
+        }
+        
+        stage('Unit Testing') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pip install pytest pytest-html
+                python manage.py migrate  # Apply database migrations
+                pytest --version
+                pytest --html=unit_test_report_unit.html tests/test_settings.py
+                """
+            }
+        }
+        
+        stage('E2E Testing') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pytest --version
+                pytest --html=unit_test_report_e2e.html tests/test_homepage.py
+                """
+            }
+        }
+    }
+}
