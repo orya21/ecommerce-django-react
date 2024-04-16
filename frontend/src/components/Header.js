@@ -31,14 +31,25 @@ function Header() {
   };
 
   return (
-    <header>
-      <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
-        <Container>
-          <LinkContainer to="/">
-            <Navbar.Brand>
-              <img src={logo} alt="Otaku Shop" />
-            </Navbar.Brand>
-          </LinkContainer>
+    // <header>
+    //   <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
+    //     <Container>
+    //       <LinkContainer to="/">
+    //         <Navbar.Brand>
+    //           <img src={logo} alt="Otaku Shop" />
+    //         </Navbar.Brand>
+    //       </LinkContainer>
+
+    <Navbar style={{ backgroundColor: 'green' }} variant="dark" expand="lg" collapseOnSelect>
+  <Container>
+    <LinkContainer to="/">
+      <Navbar.Brand>
+        <img src={logo} alt="Otaku Shop" />
+      </Navbar.Brand>
+    </LinkContainer>
+  </Container>
+</Navbar>
+
 
           <Navbar.Toggle aria-controls="navbarScroll" />
 
