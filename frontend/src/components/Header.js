@@ -36,7 +36,7 @@ function Header() {
         <Container>
           <LinkContainer to="/">
             <Navbar.Brand>
-              <img src={logo} alt="Otaku Shop" style={{ width: '150px', height: 'auto' }} />
+              <img src={logo} alt="Otaku Shop" style={{ width: '50px', height: 'auto' }} />
             </Navbar.Brand>
           </LinkContainer>
 
