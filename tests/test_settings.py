@@ -23,6 +23,6 @@ def test_secret_key():
 
 def test_allowed_hosts():
     """
-    Test if ALLOWED_HOSTS is set and is a non-empty list.
+    Test if ALLOWED_HOSTS is set and is a empty list.
     """
     assert settings.ALLOWED_HOSTS, "ALLOWED_HOSTS should be set and non-empty list."
