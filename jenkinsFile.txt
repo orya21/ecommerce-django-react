@@ -44,3 +44,68 @@ pipeline {
         }
     }
 }
+
+18.4.24 
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/orya21/ecommerce-django-react.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh """
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt 
+                python manage.py runserver 0.0.0.0:5000 &
+                sleep 10  # Wait for the server to start
+                """
+            }
+        }
+        
+        stage('Unit Testing') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pip install pytest pytest-html
+                python manage.py migrate  # Apply database migrations
+                pytest --version
+                pytest --html=unit_test_report_unit.html tests/test_settings.py
+                """
+            }
+        }
+        
+        stage('publish report') {
+            steps {
+                publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: '', reportFiles: 'report.html', reportName: 'setting Report', reportTitles: '', useWrapperFileDirectly: true]) 
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image
+                    docker.build("ecommerce-django-react")
+
+                    // Log in to Docker registry
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker_hub_credentials') {
+                        // Push Docker image to registry
+                        docker.image("ecommerce-django-react").push("latest")
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            emailext body: 'Test failed. Please check Jenkins logs for details.', subject: 'Test Failure', to: 'oryahazan@gmail.com'
+        }
+    }
+}
+
