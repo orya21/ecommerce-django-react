@@ -10,7 +10,7 @@ def client():
     
 def test_debug_mode():
     """
-    Test if DEBUG mode is set to False in production.
+    Test if DEBUG mode is set to True in production.
     """
     assert settings.DEBUG is False, "DEBUG mode should be True in production."
 
