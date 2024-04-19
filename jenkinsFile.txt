@@ -312,3 +312,73 @@ pipeline {
         }
     }
 }
+
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/orya21/ecommerce-django-react.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh """
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt 
+                python manage.py runserver 0.0.0.0:5000 &
+                sleep 10  # Wait for the server to start
+                """
+            }
+        }
+        
+        stage('Unit Testing and publish report') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pip install pytest pytest-django 
+                pytest --junitxml=./tests.xml
+            
+                """
+            }
+          post {
+        success {
+            script {
+                // בדוק אם יש קונטיינרים פועלים ורק אז הרג אותם
+                def containers = sh(script: 'docker ps -q', returnStdout: true).trim()
+                if (containers) {
+                    sh 'docker kill $(docker ps -q)'
+                }
+            }
+            sh "docker build -t ecommerce-django-react ."
+            sh "docker run -p 7000:5000 -d ecommerce-django-react"
+        }
+        failure {
+            echo 'Unit tests failed. Please check the test results.'
+        }
+        always {
+            junit 'tests.xml'
+        }
+    }
+}
+        
+        stage('publish report') {
+            steps {
+                junit stdioRetention: '', testResults: 'tests.xml'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext body: currentBuild.result == 'SUCCESS' ? 'Test passed successfully.\n\n$BUILD_URL' : 'Test failed. Please check Jenkins logs for details.\n\n$BUILD_URL', 
+            subject: currentBuild.result == 'SUCCESS' ? 'Test Success' : 'Test Failure', 
+            to: 'oryahazan@gmail.com',
+            attachLog: true // This option should be included here
+        }
+    }
+}
