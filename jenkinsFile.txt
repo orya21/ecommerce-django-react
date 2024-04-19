@@ -109,3 +109,77 @@ pipeline {
     }
 }
 
+19.4.24
+pipeline {
+    agent any
+
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                git branch: 'main', url: 'https://github.com/orya21/ecommerce-django-react.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh """
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt 
+                python manage.py runserver 0.0.0.0:5000 &
+                sleep 10  # Wait for the server to start
+                """
+            }
+        }
+        
+        stage('Unit Testing and publish report') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pip install pytest pytest-django 
+                pytest --junitxml=./tests.xml
+                """
+                //python manage.py migrate  # Apply database migrations
+                // pip install pytest-html-reporter
+                //pytest --html-report=./report.html
+
+
+            }
+            post {
+                always {    
+                    junit stdioRetention: '', testResults: 'tests.xml'
+                    // Publish unit test report
+                    // publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: '', reportFiles: 'report.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                    sh "docker build -t ecommerce-django-react ."
+                    sh "docker run -p 7000:5000 -d ecommerce-django-react"
+
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image using BuildKit
+                    sh "docker build -t ecommerce-django-react ."
+                    // Log in to Docker registry
+                    // docker.withRegistry('https://index.docker.io/v1/', 'docker_hub_credentials') {
+                    //     // Push Docker image to registry
+                    //     docker.image("ecommerce-django-react").push("latest")
+                    // }
+                    sh "docker run -p 7000:5000 -d ecommerce-django-react"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext body: currentBuild.result == 'SUCCESS' ? 'Test passed successfully.\n\n$BUILD_URL' : 'Test failed. Please check Jenkins logs for details.\n\n$BUILD_URL', 
+            subject: currentBuild.result == 'SUCCESS' ? 'Test Success' : 'Test Failure', 
+            to: 'oryahazan@gmail.com',
+            attachLog: true // This option should be included here
+        }
+    }
+}
+
