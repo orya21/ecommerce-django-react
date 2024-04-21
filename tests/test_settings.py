@@ -12,7 +12,7 @@ def test_debug_mode():
     """
     Test if DEBUG mode is set to True in production.
     """
-    assert settings.DEBUG is False, "DEBUG mode should be True in production."
+    assert settings.DEBUG is True, "DEBUG mode should be True in production."
 
 
 def test_secret_key():
