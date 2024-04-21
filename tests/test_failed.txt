@@ -3,15 +3,15 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 
 def test_github_title():
-    # התקנת דרייבר ויצירת אובייקט WebDriver עבור דפדפן Chrome
+ 
     driver = webdriver.Chrome(ChromeDriverManager().install())
     
-    # פתיחת האתר של GitHub
+  
     driver.get("https://github.com/orya21/ecommerce-django-react")
     
-    # אימות כותרת הדף
+
     expected_title = "orya21/ecommerce-django-react: A Django and React eCommerce web application"
     assert expected_title in driver.title
     
-    # סגירת הדפדפן
+   
     driver.quit()
