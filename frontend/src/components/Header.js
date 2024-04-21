@@ -15,7 +15,7 @@ import { logout } from "../actions/userActions";
 /* COMPONENTS */
 import SearchBox from "./SearchBox";
 
-import logo from "../logo.png";
+import logo from "frontend/build/static/media/logo.462f53c2.png";
 
 function Header() {
   /* PULLING A PART OF STATE FROM THE ACTUAL STATE IN THE REDUX STORE */
