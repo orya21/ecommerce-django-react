@@ -651,3 +651,94 @@ pipeline {
 
   }
 
+
+------
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker_hub')
+        DOCKER_IMAGE_NAME = 'orya2111/ecommerce-django-react'
+    }
+
+    stages {
+        stage('Pull from GitHub') {
+            steps {
+                echo 'Pulling the latest code from GitHub repository'
+                git branch: 'main', url: 'https://github.com/avih232/ecommerce-django-react.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh """
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install -r requirements.txt 
+                python manage.py runserver 0.0.0.0:5000 &
+                sleep 10  # Wait for the server to start
+                """
+            }
+        }
+
+        stage('Unit Testing') {
+            steps {
+                sh """
+                . venv/bin/activate
+                export DJANGO_SETTINGS_MODULE=backend.settings
+                pip install pytest pytest-django 
+                pytest --junitxml=./tests.xml
+                """
+            }
+            post {
+                success {
+                    echo 'Unit tests passed.'
+                }
+                failure {
+                    echo 'Unit tests failed. Please check the test results.'
+                }
+                always {
+                    junit 'tests.xml'
+                }
+            }
+        }
+
+        stage('Build and Publish Docker Image') {
+            when {
+                expression {
+                    currentBuild.result != 'FAILURE'
+                }
+            }
+            steps {
+                script {
+                    def containers = sh(script: 'docker ps -q', returnStdout: true).trim()
+                    if (containers) {
+                        sh 'docker kill $(docker ps -q)'
+                    }
+                    sh "docker build -t ${DOCKER_IMAGE_NAME} ."
+                    echo 'Pushing Docker image to DockerHub'
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        sh "docker push ${DOCKER_IMAGE_NAME}:latest"
+                    }
+                    sh "docker run -p 7000:5000 -d ${DOCKER_IMAGE_NAME}"
+                }
+            }
+        }
+
+        stage('sending mail') {
+            when {
+                expression {
+                    currentBuild.result == 'FAILURE'
+                }
+            }
+            steps {
+                echo 'Pipeline failed. Sending email notification'
+                mail to: 'oryahazan@gmail.com',
+                    subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                    body: "Something went wrong with ${env.BUILD_URL}. Please check."
+            }
+        }
+    }
+}
+
+
